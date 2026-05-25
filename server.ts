@@ -42,14 +42,14 @@ async function startServer() {
       }
 
       console.log("Calling DeepSeek generate API...");
-      const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${deepseekApiKey}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: "deepseek-v3",
           messages: [
             { role: "system", content: finalSystemInstruction },
             { role: "user", content: prompt }
