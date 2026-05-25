@@ -1,0 +1,182 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --color-neon-red: #ff3355;
+  --color-neon-dark: #0d0d11;
+  --color-neon-black: #050507;
+}
+
+@layer base {
+  body {
+    background-color: #050507;
+    color: #f4f4f5;
+    font-family: var(--font-sans);
+    overflow: hidden;
+  }
+}
+
+/* Custom glowing pulse for logo */
+@keyframes pulseGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 5px rgba(255, 51, 85, 0.3)) drop-shadow(0 0 15px rgba(255, 51, 85, 0.15));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px rgba(255, 51, 85, 0.6)) drop-shadow(0 0 30px rgba(255, 51, 85, 0.3));
+  }
+}
+
+@keyframes pulseScaleGlow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 25px rgba(255, 51, 85, 0.15);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 50px rgba(255, 51, 85, 0.4);
+    border-color: rgba(255, 51, 85, 0.4);
+  }
+}
+
+.animate-glow-red {
+  animation: pulseGlow 4s infinite ease-in-out;
+}
+
+.animate-scale-glow {
+  animation: pulseScaleGlow 3s infinite ease-in-out;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 51, 85, 0.4);
+}
+
+/* Custom Glassmorphism */
+.glass-panel {
+  background: rgba(13, 13, 17, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.glass-panel-heavy {
+  background: rgba(7, 7, 10, 0.95);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-input {
+  background: rgba(15, 15, 20, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-input:focus {
+  border-color: rgba(255, 51, 85, 0.5);
+  box-shadow: 0 0 20px rgba(255, 51, 85, 0.12);
+  background: rgba(20, 20, 27, 0.85);
+}
+
+.red-glow-border {
+  border-color: rgba(255, 51, 85, 0.3);
+  box-shadow: 0 0 15px rgba(255, 51, 85, 0.08);
+}
+
+.glow-btn-red {
+  box-shadow: 0 0 10px rgba(255, 51, 85, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glow-btn-red:hover {
+  box-shadow: 0 0 20px rgba(255, 51, 85, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Markdown styling inside bubbles */
+.markdown-body {
+  line-height: 1.6;
+}
+.markdown-body p {
+  margin-bottom: 0.75rem;
+}
+.markdown-body p:last-child {
+  margin-bottom: 0;
+}
+.markdown-body ul, .markdown-body ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.25rem;
+}
+.markdown-body ul {
+  list-style-type: disc;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+}
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.5rem 0.75rem;
+}
+.markdown-body th {
+  background: rgba(255, 255, 255, 0.03);
+  text-align: left;
+  font-weight: 500;
+}
+.markdown-body blockquote {
+  border-left: 3px solid rgba(255, 51, 85, 0.5);
+  padding-left: 0.75rem;
+  color: #a1a1aa;
+  font-style: italic;
+  margin-bottom: 0.75rem;
+}
+.markdown-body a {
+  color: #ff3355;
+  text-decoration: underline;
+  transition: color 0.2s;
+}
+.markdown-body a:hover {
+  color: #ff6688;
+}
+
+/* Typing pulse */
+.typing-dot {
+  animation: typing-bounce 1s infinite alternate;
+}
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes typing-bounce {
+  0% { transform: translateY(0); opacity: 0.3; }
+  100% { transform: translateY(-4px); opacity: 1; }
+}
+
+/* Blur lights on backgrounds */
+.bg-glow-red {
+  background: radial-gradient(circle, rgba(255, 51, 85, 0.12) 0%, rgba(255, 51, 85, 0) 70%);
+}
+.bg-glow-blue {
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.05) 0%, rgba(0, 242, 255, 0) 70%);
+}
