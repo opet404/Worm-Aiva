@@ -2,6 +2,12 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import fs from "fs";
 import path from "path";
 
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 const getSystemPrompt = (defaultInstruction: string = ""): string => {
   try {
     const promptPath = path.join(process.cwd(), "promt.txt");
@@ -28,16 +34,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    const { history, systemInstruction, temperature, file } = req.body;
+    console.log("Body received:", JSON.stringify(req.body).slice(0, 200));
+
+    const { history, systemInstruction, temperature, file } = req.body || {};
+
+    if (!history || !Array.isArray(history)) {
+      sendSSE("error", { error: "Invalid request: history is missing or not an array." });
+      res.end();
+      return;
+    }
+
     const finalSystemInstruction = getSystemPrompt(
       systemInstruction || "Anda adalah Worm Aiva."
     );
 
     const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    console.log("API Key exists:", !!deepseekApiKey);
+
     if (!deepseekApiKey) {
-      sendSSE("error", {
-        error: "DEEPSEEK_API_KEY belum dikonfigurasi.",
-      });
+      sendSSE("error", { error: "DEEPSEEK_API_KEY belum dikonfigurasi." });
       res.end();
       return;
     }
@@ -69,7 +84,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    // Non-streaming request to DeepSeek (more compatible with Vercel)
+    console.log("Calling DeepSeek with", messages.length, "messages...");
+
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -85,6 +101,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     });
 
+    console.log("DeepSeek response status:", response.status);
+
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(`DeepSeek API error ${response.status}: ${errText}`);
@@ -93,16 +111,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const data: any = await response.json();
     const text = data.choices?.[0]?.message?.content || "";
 
-    // Send full text as single chunk then done
+    console.log("Response text length:", text.length);
+
     sendSSE("chunk", { text });
     sendSSE("done", { success: true });
     res.end();
 
   } catch (error: any) {
     console.error("Stream error:", error);
-    sendSSE("error", {
-      error: error.message || "Terjadi kesalahan koneksi API DeepSeek.",
-    });
+    sendSSE("error", { error: error.message || "Terjadi kesalahan koneksi API DeepSeek." });
     res.end();
   }
 }
