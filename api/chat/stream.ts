@@ -36,8 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
     if (!deepseekApiKey) {
       sendSSE("error", {
-        error:
-          "DEEPSEEK_API_KEY belum dikonfigurasi. Silakan tambahkan Kunci API DeepSeek Anda di Vercel Environment Variables.",
+        error: "DEEPSEEK_API_KEY belum dikonfigurasi.",
       });
       res.end();
       return;
@@ -57,32 +56,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           messages.push({
             role: "user",
             content: [
-              {
-                type: "text",
-                text: item.text || "Tolong bantu analisis gambar yang dilampirkan ini.",
-              },
-              {
-                type: "image_url",
-                image_url: {
-                  url: `data:${file.type};base64,${file.base64}`,
-                },
-              },
+              { type: "text", text: item.text || "Tolong bantu analisis gambar yang dilampirkan ini." },
+              { type: "image_url", image_url: { url: `data:${file.type};base64,${file.base64}` } },
             ],
           });
         } else if (file.textData) {
           const fileContext = `--- LAMPIRAN BERKAS: ${file.name} ---\n${file.textData}\n--- AKHIR BERKAS ---\n\n`;
-          messages.push({
-            role: "user",
-            content:
-              fileContext +
-              (item.text || "Tolong jelaskan atau analisis isi berkas di atas."),
-          });
+          messages.push({ role: "user", content: fileContext + (item.text || "Tolong jelaskan atau analisis isi berkas di atas.") });
         }
       } else {
         messages.push({ role, content: item.text || "" });
       }
     });
 
+    // Non-streaming request to DeepSeek (more compatible with Vercel)
     const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -94,46 +81,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         messages,
         temperature: temperature || 0.7,
         max_tokens: 4096,
-        stream: true,
+        stream: false,
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`DeepSeek API stream error ${response.status}: ${errText}`);
+      throw new Error(`DeepSeek API error ${response.status}: ${errText}`);
     }
 
-    const body = response.body;
-    if (!body) throw new Error("No response body received from DeepSeek.");
+    const data: any = await response.json();
+    const text = data.choices?.[0]?.message?.content || "";
 
-    const handleLineData = (line: string) => {
-      const cleanLine = line.trim();
-      if (!cleanLine) return;
-      if (cleanLine === "data: [DONE]") return;
-      if (cleanLine.startsWith("data: ")) {
-        try {
-          const json = JSON.parse(cleanLine.substring(6));
-          const deltaText = json.choices?.[0]?.delta?.content || "";
-          if (deltaText) sendSSE("chunk", { text: deltaText });
-        } catch (_) {}
-      }
-    };
-
-    const reader = (body as any).getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) handleLineData(line);
-    }
-    if (buffer) handleLineData(buffer);
-
+    // Send full text as single chunk then done
+    sendSSE("chunk", { text });
     sendSSE("done", { success: true });
     res.end();
+
   } catch (error: any) {
     console.error("Stream error:", error);
     sendSSE("error", {
