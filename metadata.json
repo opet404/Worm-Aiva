@@ -1,0 +1,6 @@
+{
+  "name": "Worm Aiva",
+  "description": "An elegant, premium, and futuristic AI chatbot with glowing neon accents and responsive streaming capabilities.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
