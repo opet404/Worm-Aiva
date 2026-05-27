@@ -68,7 +68,7 @@ const handleStream = async (req: VercelRequest, res: VercelResponse) => {
         "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat-v3-0324:free",
+        model: "deepseek/deepseek-chat:free",
         messages,
         temperature: temperature || 0.7,
         max_tokens: 4096,
@@ -109,7 +109,7 @@ const handleGenerate = async (req: VercelRequest, res: VercelResponse) => {
         "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "deepseek/deepseek-chat-v3-0324:free",
+        model: "deepseek/deepseek-chat:free",
         messages: [
           { role: "system", content: finalSystem },
           { role: "user", content: prompt },
