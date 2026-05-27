@@ -2,6 +2,10 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import fs from "fs";
 import path from "path";
 
+export const config = {
+  api: { bodyParser: true },
+};
+
 const getSystemPrompt = (defaultInstruction: string = ""): string => {
   try {
     const promptPath = path.join(process.cwd(), "promt.txt");
@@ -20,26 +24,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { prompt, systemInstruction, temperature } = req.body;
+    const { prompt, systemInstruction, temperature } = req.body || {};
     const finalSystemInstruction = getSystemPrompt(
       systemInstruction || "Anda adalah Worm Aiva."
     );
 
-    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-    if (!deepseekApiKey) {
-      throw new Error(
-        "DEEPSEEK_API_KEY belum dikonfigurasi. Silakan tambahkan DEEPSEEK_API_KEY di Vercel Environment Variables."
-      );
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error("OPENROUTER_API_KEY belum dikonfigurasi di Vercel Environment Variables.");
     }
 
-    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${deepseekApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://worm-aiva.vercel.app",
+        "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: "deepseek/deepseek-chat-v3-0324:free",
         messages: [
           { role: "system", content: finalSystemInstruction },
           { role: "user", content: prompt },
@@ -51,12 +55,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`DeepSeek API error ${response.status}: ${errText}`);
+      throw new Error(`OpenRouter API error ${response.status}: ${errText}`);
     }
 
     const data: any = await response.json();
     const text = data.choices?.[0]?.message?.content || "";
     return res.json({ text });
+
   } catch (error: any) {
     console.error("Generate error:", error);
     res.status(500).json({ error: error.message || "An error occurred during generation." });

@@ -3,9 +3,7 @@ import fs from "fs";
 import path from "path";
 
 export const config = {
-  api: {
-    bodyParser: true,
-  },
+  api: { bodyParser: true },
 };
 
 const getSystemPrompt = (defaultInstruction: string = ""): string => {
@@ -34,12 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    console.log("Body received:", JSON.stringify(req.body).slice(0, 200));
-
     const { history, systemInstruction, temperature, file } = req.body || {};
 
     if (!history || !Array.isArray(history)) {
-      sendSSE("error", { error: "Invalid request: history is missing or not an array." });
+      sendSSE("error", { error: "Invalid request: history missing." });
       res.end();
       return;
     }
@@ -48,11 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       systemInstruction || "Anda adalah Worm Aiva."
     );
 
-    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-    console.log("API Key exists:", !!deepseekApiKey);
-
-    if (!deepseekApiKey) {
-      sendSSE("error", { error: "DEEPSEEK_API_KEY belum dikonfigurasi." });
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      sendSSE("error", { error: "OPENROUTER_API_KEY belum dikonfigurasi di Vercel Environment Variables." });
       res.end();
       return;
     }
@@ -84,16 +78,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     });
 
-    console.log("Calling DeepSeek with", messages.length, "messages...");
-
-    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${deepseekApiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
+        "HTTP-Referer": "https://worm-aiva.vercel.app",
+        "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "deepseek-chat",
+        model: "deepseek/deepseek-chat-v3-0324:free",
         messages,
         temperature: temperature || 0.7,
         max_tokens: 4096,
@@ -101,17 +95,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     });
 
-    console.log("DeepSeek response status:", response.status);
-
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`DeepSeek API error ${response.status}: ${errText}`);
+      throw new Error(`OpenRouter API error ${response.status}: ${errText}`);
     }
 
     const data: any = await response.json();
     const text = data.choices?.[0]?.message?.content || "";
-
-    console.log("Response text length:", text.length);
 
     sendSSE("chunk", { text });
     sendSSE("done", { success: true });
@@ -119,7 +109,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   } catch (error: any) {
     console.error("Stream error:", error);
-    sendSSE("error", { error: error.message || "Terjadi kesalahan koneksi API DeepSeek." });
+    sendSSE("error", { error: error.message || "Terjadi kesalahan koneksi API." });
     res.end();
   }
 }
