@@ -68,7 +68,7 @@ const handleStream = async (req: VercelRequest, res: VercelResponse) => {
         "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: "deepseek/deepseek-r1-0528:free",
         messages,
         temperature: temperature || 0.7,
         max_tokens: 4096,
@@ -109,7 +109,7 @@ const handleGenerate = async (req: VercelRequest, res: VercelResponse) => {
         "X-Title": "Worm Aiva",
       },
       body: JSON.stringify({
-        model: "meta-llama/llama-3.1-8b-instruct:free",
+        model: "deepseek/deepseek-r1-0528:free",
         messages: [
           { role: "system", content: finalSystem },
           { role: "user", content: prompt },
